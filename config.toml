@@ -1,0 +1,179 @@
+# Universal Store system-wide mise config.
+# Install on a new Mac to /etc/mise/config.toml (needs sudo):
+#   sudo mkdir -p /etc/mise && sudo cp config.toml /etc/mise/config.toml
+#
+[bootstrap.brew.taps]
+"shopify/shopify" = "https://github.com/Shopify/homebrew-shopify"
+"localstack/tap" = "https://github.com/localstack/homebrew-tap"
+
+# --- Packages ----------------------------------------------------------------
+# Formulae and casks every engineer gets. Previously src/apps.ab's CORE list,
+# rendered into ~/.Brewfile. "latest" means "any version" — nothing is pinned.
+#
+# Not here, deliberately:
+#   mise — installs itself before this file is ever read
+[bootstrap.packages]
+# Version control and GitHub
+"brew:git" = "latest"
+"brew:gh" = "latest"
+"brew:lazygit" = "latest"
+"brew:git-delta" = "latest"
+
+# Shell and core CLI
+"brew:bash" = "latest"                     # bash 5 (macOS ships 3.2)
+"brew:zsh" = "latest"                      # newer than the system zsh
+"brew:coreutils" = "latest"
+"brew:curl" = "latest"
+"brew:wget" = "latest"
+"brew:openssh" = "latest"
+"brew:watch" = "latest"
+"brew:stow" = "latest"                     # applies the dotfiles repo into $HOME
+"brew:shellcheck" = "latest"
+"brew:uv" = "latest"
+
+# Search, navigation, inspection
+"brew:ripgrep" = "latest"
+"brew:fd" = "latest"
+"brew:fzf" = "latest"
+"brew:zoxide" = "latest"
+"brew:bat" = "latest"
+"brew:tree" = "latest"
+"brew:jq" = "latest"
+"brew:yq" = "latest"
+"brew:htop" = "latest"
+
+# Editor and multiplexer
+"brew:neovim" = "latest"
+"brew:zellij" = "latest"
+
+# Cloud and platform
+"brew:azure-cli" = "latest"
+"brew:awscli" = "latest"
+"brew:awscli-local" = "latest"
+"brew:aws-cdk" = "latest"
+"brew:localstack/tap/localstack-cli" = "latest"
+"brew:nx" = "latest"                      # Nx CLI
+"brew:shopify/shopify/shopify-cli" = "latest"
+"brew-cask:gcloud-cli" = "latest"
+
+# Desktop apps everyone gets
+"brew-cask:postman" = "latest"
+"brew-cask:claude" = "latest"
+"brew-cask:claude-code" = "latest"
+"brew-cask:lastpass" = "latest"
+"brew-cask:docker-desktop" = "latest"
+"brew:lazydocker" = "latest"
+
+# Personal apps
+"brew-cask:bitwarden" = "latest"
+"brew-cask:zen" = "latest"                 # Zen Browser
+"brew-cask:ghostty" = "latest"
+"brew:lazysql" = "latest"                  # TUI database client
+"brew-cask:vlc" = "latest"                 # VLC media player
+"brew-cask:obsidian" = "latest"            # notes
+"brew-cask:beeper" = "latest"              # unified chat
+"brew-cask:yubico-authenticator" = "latest"
+"brew-cask:localsend" = "latest"           # file sharing
+"brew:pi-coding-agent" = "latest"          # Pi AI coding agent (pi.dev), runs as `pi`
+"brew-cask:vorssaint" = "latest"           # menu bar toolkit; updates itself
+
+# --- Global runtimes ---------------------------------------------------------
+# Replaces the MISE_TOOLS list + mise_use_global() in the Amber source.
+[tools]
+node = "lts"
+python = "latest"
+pnpm = "latest"
+
+# --- Shell activation: deliberately NOT declared here ------------------------
+# There is no [bootstrap.mise_shell_activate] on purpose.
+#
+# It writes a managed block into ~/.zshrc, and the dotfiles repo owns that file
+# via a stow symlink. mise refuses to write through a symlink — "target is a
+# symlink; edit the real file instead" — and that error ABORTS `mise bootstrap`
+# before the [tools] phase above, so node and pnpm would silently never install.
+#
+# Bootstrap writes `eval "$(mise activate zsh)"` into the file it owns,
+# ~/.config/bootstrap/env.zsh, which ~/.zshrc sources instead.
+
+# --- Dotfiles ----------------------------------------------------------------
+# Not mise's: the dotfiles repo is cloned and applied with GNU stow by
+# src/lib/dotfiles.ab, so there is no [dotfiles] or [settings.dotfiles] here.
+# See that file for the ownership boundary this preserves.
+
+# --- macOS defaults ----------------------------------------------------------
+# Previously configure_macos_defaults() in src/lib/macos.ab. Values are typed:
+# a TOML bool is written as -bool, an integer as -int, a string as -string.
+#
+# com.apple.screencapture.location is NOT here: mise does not expand ~ in
+# defaults values, so the absolute path is written into 10-picked.toml.
+[bootstrap.macos.defaults."com.apple.finder"]
+AppleShowAllFiles = true                   # show hidden/dotfiles
+ShowPathbar = true                         # show the path bar
+ShowStatusBar = true                       # show the status bar
+_FXSortFoldersFirst = true                 # list folders before files
+FXDefaultSearchScope = "SCcf"              # search the current folder, not "This Mac"
+FXEnableExtensionChangeWarning = false     # don't warn when renaming changes an extension
+FXPreferredViewStyle = "Nlsv"              # list view by default
+NewWindowTarget = "PfHm"                   # new windows open in the home folder
+WarnOnEmptyTrash = false                   # no confirmation when emptying the trash
+
+[bootstrap.macos.defaults.NSGlobalDomain]
+AppleShowAllExtensions = true              # always show file extensions
+KeyRepeat = 2                              # fastest key repeat rate
+InitialKeyRepeat = 15                      # shorter delay before repeat starts
+ApplePressAndHoldEnabled = false           # hold-to-repeat instead of the accent picker
+NSAutomaticQuoteSubstitutionEnabled = false # keep straight quotes in commands and code
+NSAutomaticDashSubstitutionEnabled = false # preserve double hyphens
+NSAutomaticCapitalizationEnabled = false  # preserve command and identifier casing
+NSAutomaticPeriodSubstitutionEnabled = false # don't turn double spaces into a period
+NSNavPanelExpandedStateForSaveMode = true  # show folders in Save dialogs
+NSNavPanelExpandedStateForSaveMode2 = true # expanded Save dialogs in newer apps
+PMPrintingExpandedStateForPrint = true     # expanded Print dialogs
+PMPrintingExpandedStateForPrint2 = true    # expanded Print dialogs in newer apps
+
+[bootstrap.macos.defaults."com.apple.dock"]
+mru-spaces = false                        # keep desktop Spaces in a stable order
+autohide = true                            # hide the Dock until the pointer reaches it
+autohide-delay = 0.0                       # show it with no delay
+show-recents = false                       # no recent apps section
+tilesize = 48                              # smaller icons (default is 64)
+
+[bootstrap.macos.defaults."com.apple.screencapture"]
+type = "png"                               # force PNG format
+location = "/Users/mmagin/Screenshots"     # absolute: mise does not expand ~ here
+disable-shadow = true                      # no drop shadow on window captures
+
+# --- Trackpad (built-in and Bluetooth) ---------------------------------------
+# Tap to click and three-finger drag. The three-finger swipe gestures are moved
+# off so they don't fight the drag. Takes effect after logging out and back in.
+[bootstrap.macos.defaults."com.apple.AppleMultitouchTrackpad"]
+Clicking = true
+TrackpadThreeFingerDrag = true
+TrackpadThreeFingerHorizSwipeGesture = 0
+TrackpadThreeFingerVertSwipeGesture = 0
+
+[bootstrap.macos.defaults."com.apple.driver.AppleBluetoothMultitouch.trackpad"]
+Clicking = true
+TrackpadThreeFingerDrag = true
+TrackpadThreeFingerHorizSwipeGesture = 0
+TrackpadThreeFingerVertSwipeGesture = 0
+
+# --- Downloaded-app prompt ---------------------------------------------------
+# Turns off "X is an app downloaded from the internet. Are you sure...?".
+# Recent macOS versions may ignore this; Gatekeeper still checks signatures.
+[bootstrap.macos.defaults."com.apple.LaunchServices"]
+LSQuarantine = false
+
+[bootstrap.macos.defaults."com.apple.desktopservices"]
+DSDontWriteNetworkStores = true            # no .DS_Store on network shares
+DSDontWriteUSBStores = true                # no .DS_Store on USB drives
+
+# --- Repositories ------------------------------------------------------------
+# Cloned if missing. Bootstrap aborts if an existing checkout has local changes;
+# pass --skip-dirty to step over those. HTTPS, so the first clone needs GitHub
+# credentials (e.g. run `gh auth login` first).
+[bootstrap.repos]
+"/Users/mmagin/code/monorepo" = { url = "https://github.com/UniversalStore/monorepo.git" }
+"/Users/mmagin/code/thrills-monorepo" = { url = "https://github.com/UniversalStore/thrills-monorepo.git" }
+"/Users/mmagin/code/ShopifyUSTheme" = { url = "https://github.com/UniversalStore/ShopifyUSTheme.git" }
+"/Users/mmagin/code/ShopifyPSTheme" = { url = "https://github.com/UniversalStore/ShopifyPSTheme.git" }
